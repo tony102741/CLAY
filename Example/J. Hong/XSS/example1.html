@@ -1,0 +1,98 @@
+<!--J. Hong이 작성한 예제-->
+<!DOCTYPE html>
+<html lang="kr">
+    <head>
+        <meta charset="UTF-8">
+        <title>간단한 XSS예제</title>
+    </head>
+    <body>
+        <h1>게시물 작성</h1>
+        <hr>
+        <div style="border-style: solid; padding: 2vw;">
+            <form>
+                <label for="title">
+                    <span>제목:</span>
+                    <br>
+                </label>
+                <input id="title" type="text" size="64">
+                <br>
+                <label for="content">
+                    <span>내용:</span>
+                    <br>
+                </label>
+                <textarea id="content" cols="128" rows="32"></textarea>
+                <br>
+                <input id="filtering" type="checkbox">
+                <label for="filtering">HTML 태그 필터링</label>
+                <br>
+                <input type="button" value="작성" onclick="write_content(document.getElementById('filtering').checked)">
+            </form>
+        </div>
+        <script>
+            function write_content(user_text_filtering = false) {
+                // 새 창을 열고 기본 페이지 코드와 사용자 입력값을 합쳐 출력합니다.
+
+                // 기본 페이지 코드 A
+                const view_page_html_A="\
+                <!DOCTYPE html>\
+                <html lang='kr'>\
+                    <head>\
+                        <meta charset='UTF-8'>\
+                        <title>게시물 조회</title>\
+                    </head>\
+                    <body>\
+                        <h1>게시물 조회<h1>\
+                        <hr>\
+                        <div id='content_area'>\
+                            <p id='title'>";
+
+                // 기본 페이지 코드 B
+                const view_page_html_B="</p>\
+                            <p id='content'>";
+
+                // 기본 페이지 코드 C
+                const view_page_html_C="</p>\
+                        </div>\
+                    </body>\
+                </html>";
+
+                // 사용자 입력 값을 가져오기
+                let title_text = document.getElementById("title").value;
+                let content_text = document.getElementById("content").value;
+
+                if(user_text_filtering) {
+                    /*
+                     * HTML 태그에 사용되는 특수 문자들을 HTML Entity로 치환
+                     * 아래 필터링 코드는 단순한 구현의 예시일 뿐 실제 공격은
+                     * 훨씬 복합적이고 지능적이기 때문에 이런 단순한 방법으로는
+                     * 방어가 어려울 수 있음.
+                    */
+
+                    // 제목 문자열 필터링
+                    title_text = title_text.replaceAll("&", "&amp;");
+                    title_text = title_text.replaceAll(";", "&semi;");
+                    title_text = title_text.replaceAll("<", "&lt;");
+                    title_text = title_text.replaceAll(">", "&gt;");
+                    title_text = title_text.replaceAll("\"", "&quot;");
+                    title_text = title_text.replaceAll("'", "&apos;");
+
+                    // 본문 문자열 필터링
+                    content_text = content_text.replaceAll("&", "&amp;");
+                    content_text = content_text.replaceAll(";", "&semi;");
+                    content_text = content_text.replaceAll("<", "&lt;");
+                    content_text = content_text.replaceAll(">", "&gt;");
+                    content_text = content_text.replaceAll("\"", "&quot;");
+                    content_text = content_text.replaceAll("'", "&apos;");
+                }
+
+                // 새 창을 만들고 기본 페이지 코드와 사용자 입력 값을 문자열 연산을 통해 합치기 후 출력
+                let child_window = null;
+                if(child_window == null || child_window.closed)
+                    child_window = window.open("", "post_view_window", "width=1280px, height=720px");
+                child_window.open();
+                child_window.document.write(view_page_html_A + title_text + view_page_html_B + content_text + view_page_html_C);
+                //child_window.close(); // 페이지가 바로 닫혀버리는 관계로 주석 처리
+            }
+        </script>
+    </body>
+</html>
